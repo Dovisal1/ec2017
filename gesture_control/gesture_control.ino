@@ -6,6 +6,13 @@
     #include "Wire.h"
 #endif
 
+#include <SPI.h>
+#include "RF24.h"
+
+byte addresses[][7] = {"3drive", "3cntrl"};
+
+RF24 radio(7,8);
+
 MPU6050 mpu;
 
 volatile bool mpuInterrupt = false;
@@ -50,12 +57,11 @@ void setup() {
 		packet_size = mpu.dmpGetFIFOPacketSize();
 	} // else error
 
-  pinMode(13, OUTPUT);
+  radio.begin();
+  radio.openWritingPipe(addresses[1]);
+  radio.openReadingPipe(1, addresses[0]);
+  
 }
-
-float pitch = 0;
-float roll = 0;
-uint8_t ledstatus = 0;
 
 void loop() {
 
@@ -81,30 +87,16 @@ void loop() {
 			mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
 
 			// convert pitch and roll to degrees
-			pitch = ypr[1] * 180/M_PI;
-			roll  = ypr[2] * 180/M_PI;
+			ypr[1] = ypr[1] * 180/M_PI;
+			ypr[2] = ypr[2] * 180/M_PI;
 
-      char level;
-      if (pitch > 40)
-        level = 'A';
-      else if (pitch > 30)
-        level = 'B';
-			else if (pitch > 20)
-				level = 'C';
-			else if (pitch > 10)
-				level = 'D';
-			else if (pitch > -10)
-				level = 'E';
-			else if (pitch > -20)
-				level = 'F';
-      else if (pitch > -30)
-        level = 'G';
-      else if (pitch > -40)
-        level = 'H';
-      else
-        level = 'I';
+      if (!radio.write(ypr+1, 2*sizeof(float))) {
+        Serial.println("tx error");
+      }
 
-      Serial.println(pitch);
+      Serial.print(ypr[1]);
+      Serial.print(" ");
+      Serial.println(ypr[2]);
 		}
 	}
 }
