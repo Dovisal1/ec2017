@@ -4,6 +4,10 @@
 byte addresses[][7] = {"3drive", "3cntrl"};
 RF24 radio(7, 8);
 
+#define DEBUG 0
+#define Dprint(s) if (DEBUG) Serial.print(s)
+#define Dprintln(s) if (DEBUG) Serial.println(s)
+
 void setup() {
   // put your setup code here, to run once:
   // Driver Set up
@@ -15,6 +19,12 @@ void setup() {
   OCR1B = 1500; //left
   DDRB = 0xff;
 
+  if (DEBUG) {
+    Serial.begin(9600);
+    while(!Serial)
+      ;
+  }
+
   // Radio Communication Setup
   radio.begin();
   radio.openWritingPipe(addresses[0]);
@@ -22,48 +32,92 @@ void setup() {
   radio.startListening();
 }
 
+unsigned long last_rx = 0;
+
+float pmax = 50;
+float rmax = 50;
+
+#define TURN_THRESHOLD 14
+#define CURVE 4
+#define TIMEOUT 250
+
 void loop() {
   // put your main code here, to run repeatedly:
-  float pr[2];
+  float p, r, pr[2];
 
+  float cap;
+  int speed;
+  float lpercent, rpercent;
+  int diff, rdiff, ldiff;
+  
   if (radio.available()) {
+
       while(radio.available()) {
         radio.read(pr, sizeof(pr));
       }
-  
-    float rspeed, lspeed, diff;
-    int sign;
-  
-    if (pr[0] > 0)
-      sign = 1;
-    else
-      sign = -1;
-  
-    int turn;
-    if (pr[1] > 0)
-      turn = 1;
-    else
-      turn = -1;
-  
-    if (pr[1] > 20 || pr[1] < -20) {//turn
-      diff = map(pr[1], turn * 20, turn * 50, 1, 1.3) * pr[0];
-      lspeed = range_value(pr[0] - turn * sign * diff);
-      rspeed = range_value(pr[0] + turn * sign * diff);
       
-        
-      OCR1A = map(rspeed, -75, 75, 1000, 2000);
-      OCR1B = map(lspeed, -75, 75, 1000, 2000);
-    } else {
-      OCR1A = OCR1B = map(pr[0], -75, 75, 1000, 2000);
-    }
-   }
+      p = pr[0];
+      r = pr[1];
+      
+      if (abs(p) > pmax)
+        pmax = abs(p);
+      if (abs(r) > rmax)
+        rmax = abs(r);
+      
+      if (r >= TURN_THRESHOLD) {
+        cap = logmap(r, TURN_THRESHOLD, rmax, 0.0, 100.0, CURVE);
+        rpercent = (150.0 - cap/2) / 100.0;
+        //rpercent = 1;
+        lpercent = (100.0 - cap) / 100.0;
+      } else if (r <= -TURN_THRESHOLD) {
+        cap = logmap(r, -TURN_THRESHOLD, -rmax, 0.0, 100.0, CURVE);
+        lpercent = (150.0 - cap/2) / 100.0;
+        //lpercent = 1;
+        rpercent = (100.0 - cap) / 100.0;
+      } else {
+        lpercent = rpercent = 1;
+      }
+
+      speed = abs(p);
+      diff = map(speed, 0, pmax, 0, 500);
+
+      rdiff = diff * rpercent;
+      ldiff = diff * lpercent;
+      
+      if (rdiff > 500) {
+          ldiff -= (rdiff - 500);
+          rdiff = 500;
+      } else if (ldiff > 500) {
+        rdiff -= (ldiff - 500);
+        ldiff = 500;
+      }
+      
+      if (p >= 0) {
+        OCR1A = 1500 + rdiff;
+        OCR1B = 1500 + ldiff;
+      } else {
+        OCR1A = 1500 - rdiff;
+        OCR1B = 1500 - ldiff;
+      }
+
+      if (DEBUG) {
+        char fmt[] = "p = %s; r = %s; diff = %d; OCR1A = %d; OCR1B = %d\n";
+        char buf[256];
+        char rbuf[16], pbuf[16];
+        dtostrf(p, 4, 2, pbuf);
+        dtostrf(r, 4, 2, rbuf);
+        sprintf(buf, fmt, pbuf, rbuf, diff, OCR1A, OCR1B);
+        Serial.println(buf);
+      }
+
+      last_rx = millis();
+  } else if (millis() - last_rx > TIMEOUT) {
+    OCR1A = OCR1B = 1500;
+    last_rx = millis();
+  }
 }
 
-float range_value(float num) {
-  if (num > 75)
-      return 75;
-  else if (num < -75)
-      return -75;
-  else
-      return num;
+float logmap(float x, float imn, float imx, float omn, float omx, float curve) {
+  return omn + (omx - omn) * pow((x - imn) / (imx - imn), curve);
 }
+

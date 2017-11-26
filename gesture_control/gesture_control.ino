@@ -75,7 +75,6 @@ void loop() {
   
 	if (mpuInterrupt || fifo_count >= packet_size) {
 		mpuInterrupt = false;
-    lastread = millis();
 		mpuIntStatus = mpu.getIntStatus();
 		fifo_count = mpu.getFIFOCount();
 
@@ -107,6 +106,7 @@ void loop() {
       Serial.print(F(" "));
       Serial.println(ypr[2]);
 		}
+   lastread = millis();
 	} else if (millis() - lastread > 250) {
     Serial.println(F("timeout!"));
     while (mpu.dmpInitialize())
