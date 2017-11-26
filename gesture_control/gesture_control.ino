@@ -9,6 +9,11 @@
 #include <SPI.h>
 #include "RF24.h"
 
+#define DEBUG 0
+#define Dprint(s) if (DEBUG) Serial.print(s)
+#define Dprintln(s) if (DEBUG) Serial.println(s)
+#define Dflush if (DEBUG) Serial.flush();
+
 byte addresses[][7] = {"3drive", "3cntrl"};
 
 RF24 radio(7,8);
@@ -40,20 +45,25 @@ void setup() {
   EICRA = 0x03;
   EIMSK = 0x01;
 
-	Serial.begin(9600);
+  if (DEBUG) {
+    Serial.begin(9600);
+    while(!Serial)
+      ;
+  }
 
 	mpu.initialize();
  
-	Serial.print(F("Testing device connections..."));
+	Dprint(F("Testing device connections..."));
+  Dflush;
 
   while (!mpu.testConnection()) {
-    Serial.println(F("MPU6050 connection failed."));
-    Serial.print(F("Trying again..."));
+    Dprintln(F("MPU6050 connection failed."));
+    Dprint(F("Trying again..."));
     mpu.initialize();
     delay(250);
   }
 
-  Serial.println(F("MPU6050 connection successful."));
+  Dprintln(F("MPU6050 connection successful."));
 
 	mpu.setXGyroOffset(49);
 	mpu.setYGyroOffset(-15);
@@ -61,7 +71,7 @@ void setup() {
 	mpu.setZAccelOffset(1546);
 
 	while (mpu.dmpInitialize())
-    Serial.println(F("DMP init failed!"));
+    Dprintln(F("DMP init failed!"));
   
   mpu.setDMPEnabled(true);
   packet_size = mpu.dmpGetFIFOPacketSize();
@@ -99,18 +109,17 @@ void loop() {
 			ypr[2] = ypr[2] * 180/M_PI;
 
       if (!radio.write(ypr+1, 2*sizeof(float)))
-        //Serial.println(F("tx error"));
-        ;
+        ;//Dprintln(F("tx error"));
 
-      Serial.print(ypr[1]);
-      Serial.print(F(" "));
-      Serial.println(ypr[2]);
+      Dprint(ypr[1]);
+      Dprint(F(" "));
+      Dprintln(ypr[2]);
 		}
    lastread = millis();
 	} else if (millis() - lastread > 250) {
-    Serial.println(F("timeout!"));
+    Dprintln(F("timeout!"));
     while (mpu.dmpInitialize())
-      ;
+      Dprintln(F("init"));
     mpu.setDMPEnabled(true);
     lastread = millis();
 	}
