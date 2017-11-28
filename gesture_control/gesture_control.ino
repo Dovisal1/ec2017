@@ -9,6 +9,8 @@
 #include <SPI.h>
 #include "RF24.h"
 
+#include <avr/wdt.h>
+
 #define DEBUG 0
 #define Dprint(s) if (DEBUG) Serial.print(s)
 #define Dprintln(s) if (DEBUG) Serial.println(s)
@@ -36,7 +38,7 @@ float ypr[3]; // yaw, pitch, roll
 unsigned long lastread = 0;
 
 void setup() {
-
+  
   // Begin the I2C for MPU6050 (gyroscope input)
 	Wire.begin();
 	TWBR = 24; //400KHz SCL
@@ -78,10 +80,26 @@ void setup() {
 
   radio.begin();
   radio.openWritingPipe(addresses[1]);
-  radio.openReadingPipe(1, addresses[0]); 
+  radio.openReadingPipe(1, addresses[0]);
+
+  /* enable the watchdog
+   *  we are using a 250ms watchdog timer.
+   *  The gyroscope sensor will arbitrarily hang, and it seems
+   *  that others online are reporting the same problem without
+   *  any good solutions.
+   *  
+   *  Hopefully this watchdog timer will solve the issue
+   *  albeit in an imperfect way.
+   */
+  cli();
+  WDTCSR = 0x18; // enter config
+  WDTCSR = 0x0d;
+  sei();
 }
 
 void loop() {
+
+  wdt_reset(); // update the watchdog
   
 	if (mpuInterrupt || fifo_count >= packet_size) {
 		mpuInterrupt = false;
@@ -115,6 +133,7 @@ void loop() {
       Dprint(F(" "));
       Dprintln(ypr[2]);
 		}
+   
    lastread = millis();
 	} else if (millis() - lastread > 250) {
     Dprintln(F("timeout!"));

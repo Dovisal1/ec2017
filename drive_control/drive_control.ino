@@ -34,11 +34,12 @@ void setup() {
 
 unsigned long last_rx = 0;
 
-float pmax = 50;
-float rmax = 50;
+float pmax = 55;
+float rmax = 55;
 
 #define TURN_THRESHOLD 14
-#define CURVE 4
+#define TURN_CURVE 4
+#define THROTTLE_THRESHOLD 8
 #define TIMEOUT 250
 
 void loop() {
@@ -63,14 +64,15 @@ void loop() {
         pmax = abs(p);
       if (abs(r) > rmax)
         rmax = abs(r);
-      
-      if (r >= TURN_THRESHOLD) {
-        cap = logmap(r, TURN_THRESHOLD, rmax, 0.0, 100.0, CURVE);
+
+      /* turning logic */
+      if (r >= TURN_THRESHOLD) { //left turn
+        cap = logmap(r, TURN_THRESHOLD, rmax, 0.0, 100.0, TURN_CURVE);
         rpercent = (150.0 - cap/2) / 100.0;
         //rpercent = 1;
         lpercent = (100.0 - cap) / 100.0;
-      } else if (r <= -TURN_THRESHOLD) {
-        cap = logmap(r, -TURN_THRESHOLD, -rmax, 0.0, 100.0, CURVE);
+      } else if (r <= -TURN_THRESHOLD) { //right turn
+        cap = logmap(r, -TURN_THRESHOLD, -rmax, 0.0, 100.0, TURN_CURVE);
         lpercent = (150.0 - cap/2) / 100.0;
         //lpercent = 1;
         rpercent = (100.0 - cap) / 100.0;
@@ -79,7 +81,11 @@ void loop() {
       }
 
       speed = abs(p);
-      diff = map(speed, 0, pmax, 0, 500);
+
+      if (speed > THROTTLE_THRESHOLD)
+        diff = logmap(speed, THROTTLE_THRESHOLD, pmax, 50, 500, 0.5);
+      else
+        diff = map(speed, 0, THROTTLE_THRESHOLD, 0, 50);
 
       rdiff = diff * rpercent;
       ldiff = diff * lpercent;
@@ -112,7 +118,7 @@ void loop() {
 
       last_rx = millis();
   } else if (millis() - last_rx > TIMEOUT) {
-    OCR1A = OCR1B = 1500;
+    OCR1A = OCR1B = 1500; // stop motors
     last_rx = millis();
   }
 }
