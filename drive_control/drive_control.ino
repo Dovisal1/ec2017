@@ -41,6 +41,7 @@ float rmax = 55;
 #define TURN_THRESHOLD 14
 #define TURN_CURVE 4
 #define THROTTLE_THRESHOLD 8
+#define THROTTLE_MAX 45
 #define TIMEOUT 250
 
 void loop() {
@@ -83,8 +84,10 @@ void loop() {
         lpercent = rpercent = 1;
       }
 
-      if (speed > THROTTLE_THRESHOLD)
-        diff = logmap(speed, THROTTLE_THRESHOLD, pmax, 50, 500, 0.5);
+      if (speed > THROTTLE_MAX)
+        diff = 500;
+      else if (speed > THROTTLE_THRESHOLD)
+        diff = logmap(speed, THROTTLE_THRESHOLD, THROTTLE_MAX, 50, 500, 0.8);
       else
         diff = map(speed, 0, THROTTLE_THRESHOLD, 0, 50);
 
