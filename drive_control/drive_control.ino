@@ -60,9 +60,11 @@ void loop() {
       
       p = pr[0];
       r = pr[1];
+
+      speed = abs(p);
       
-      if (abs(p) > pmax)
-        pmax = abs(p);
+      if (speed > pmax)
+        pmax = speed;
       if (abs(r) > rmax)
         rmax = abs(r);
 
@@ -80,8 +82,6 @@ void loop() {
       } else {
         lpercent = rpercent = 1;
       }
-
-      speed = abs(p);
 
       if (speed > THROTTLE_THRESHOLD)
         diff = logmap(speed, THROTTLE_THRESHOLD, pmax, 50, 500, 0.5);
