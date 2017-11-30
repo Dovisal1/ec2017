@@ -14,9 +14,10 @@ void setup() {
   TCCR1A = 0xA2;
   TCCR1B = 0x12;
   TCCR1C = 0x00;
-  ICR1 = 20000;
+  ICR1 = 20000; // top
   OCR1A = 1500; //right
   OCR1B = 1500; //left
+  
   DDRB = 0xff;
 
   if (DEBUG) {
@@ -44,7 +45,7 @@ float rmax = 55;
 
 void loop() {
   // put your main code here, to run repeatedly:
-  float p, r, pr[2];
+  float p, r, pr[2]; // pitch roll values
 
   float cap;
   int speed;
