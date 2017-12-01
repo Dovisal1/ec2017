@@ -41,7 +41,7 @@ float rmax = 55;
 #define TURN_THRESHOLD 14
 #define TURN_CURVE 4
 #define THROTTLE_THRESHOLD 8
-#define THROTTLE_MAX 45
+#define THROTTLE_MAX 55
 #define TIMEOUT 250
 
 void loop() {
