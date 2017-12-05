@@ -1,3 +1,4 @@
+
 #include <SPI.h>
 #include "RF24.h"
 
@@ -9,8 +10,8 @@ RF24 radio(7, 8);
 #define Dprintln(s) if (DEBUG) Serial.println(s)
 
 void setup() {
-  // put your setup code here, to run once:
-  // Driver Set up
+
+  // PWM out setup
   TCCR1A = 0xA2;
   TCCR1B = 0x12;
   TCCR1C = 0x00;
@@ -40,12 +41,12 @@ float rmax = 55;
 
 #define TURN_THRESHOLD 14
 #define TURN_CURVE 4
-#define THROTTLE_THRESHOLD 8
+#define THROTTLE_THRESHOLD 10
 #define THROTTLE_MAX 45
-#define TIMEOUT 250
+#define TIMEOUT 500
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  
   float p, r, pr[2]; // pitch roll values
 
   float cap;
@@ -71,12 +72,12 @@ void loop() {
 
       /* turning logic */
       if (r >= TURN_THRESHOLD) { //left turn
-        cap = logmap(r, TURN_THRESHOLD, rmax, 0.0, 100.0, TURN_CURVE);
+        cap = polymap(r, TURN_THRESHOLD, rmax, 0.0, 100.0, TURN_CURVE);
         rpercent = (150.0 - cap/2) / 100.0;
         //rpercent = 1;
         lpercent = (100.0 - cap) / 100.0;
       } else if (r <= -TURN_THRESHOLD) { //right turn
-        cap = logmap(r, -TURN_THRESHOLD, -rmax, 0.0, 100.0, TURN_CURVE);
+        cap = polymap(r, -TURN_THRESHOLD, -rmax, 0.0, 100.0, TURN_CURVE);
         lpercent = (150.0 - cap/2) / 100.0;
         //lpercent = 1;
         rpercent = (100.0 - cap) / 100.0;
@@ -87,7 +88,7 @@ void loop() {
       if (speed > THROTTLE_MAX)
         diff = 500;
       else if (speed > THROTTLE_THRESHOLD)
-        diff = logmap(speed, THROTTLE_THRESHOLD, THROTTLE_MAX, 50, 500, 0.8);
+        diff = polymap(speed, THROTTLE_THRESHOLD, THROTTLE_MAX, 50, 500, 0.8);
       else
         diff = map(speed, 0, THROTTLE_THRESHOLD, 0, 50);
 
@@ -127,7 +128,7 @@ void loop() {
   }
 }
 
-float logmap(float x, float imn, float imx, float omn, float omx, float curve) {
+float polymap(float x, float imn, float imx, float omn, float omx, float curve) {
   return omn + (omx - omn) * pow((x - imn) / (imx - imn), curve);
 }
 
