@@ -14,7 +14,6 @@
 #define DEBUG 0
 #define Dprint(s) if (DEBUG) Serial.print(s)
 #define Dprintln(s) if (DEBUG) Serial.println(s)
-#define Dflush if (DEBUG) Serial.flush();
 
 byte addresses[][7] = {"3drive", "3cntrl"};
 
@@ -56,7 +55,6 @@ void setup() {
 	mpu.initialize();
  
 	Dprint(F("Testing device connections..."));
-  Dflush;
 
   while (!mpu.testConnection()) {
     Dprintln(F("MPU6050 connection failed."));
@@ -126,8 +124,7 @@ void loop() {
 			ypr[1] = ypr[1] * 180/M_PI;
 			ypr[2] = ypr[2] * 180/M_PI;
 
-      if (!radio.write(ypr+1, 2*sizeof(float)))
-        ;//Dprintln(F("tx error"));
+      radio.write(ypr+1, 2*sizeof(float));
 
       Dprint(ypr[1]);
       Dprint(F(" "));
