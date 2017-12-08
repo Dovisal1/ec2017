@@ -77,12 +77,10 @@ void loop() {
       if (r >= TURN_THRESHOLD) { //left turn
         cap = polymap(r, TURN_THRESHOLD, rmax, 0.0, 100.0, TURN_CURVE);
         rpercent = (300.0 - cap) / 200.0;
-        //rpercent = 1;
         lpercent = (100.0 - cap) / 100.0;
       } else if (r <= -TURN_THRESHOLD) { //right turn
         cap = polymap(r, -TURN_THRESHOLD, -rmax, 0.0, 100.0, TURN_CURVE);
         lpercent = (300.0 - cap) / 200.0;
-        //lpercent = 1;
         rpercent = (100.0 - cap) / 100.0;
       } else {
         lpercent = rpercent = 1;
