@@ -45,6 +45,9 @@ float rmax = 55;
 #define THROTTLE_MAX 50
 #define TIMEOUT 500
 
+// these store the values from the previous transmission
+int _ldiff = 0, _rdiff = 0;
+
 void loop() {
   
   float p, r, pr[2]; // pitch roll values
@@ -73,12 +76,12 @@ void loop() {
       /* turning logic */
       if (r >= TURN_THRESHOLD) { //left turn
         cap = polymap(r, TURN_THRESHOLD, rmax, 0.0, 100.0, TURN_CURVE);
-        rpercent = (150.0 - cap/2) / 100.0;
+        rpercent = (300.0 - cap) / 200.0;
         //rpercent = 1;
         lpercent = (100.0 - cap) / 100.0;
       } else if (r <= -TURN_THRESHOLD) { //right turn
         cap = polymap(r, -TURN_THRESHOLD, -rmax, 0.0, 100.0, TURN_CURVE);
-        lpercent = (150.0 - cap/2) / 100.0;
+        lpercent = (300.0 - cap) / 200.0;
         //lpercent = 1;
         rpercent = (100.0 - cap) / 100.0;
       } else {
@@ -102,13 +105,22 @@ void loop() {
         rdiff -= (ldiff - 500);
         ldiff = 500;
       }
+
+      // compute the current update as the average
+      // of the current and previous updates
+      // >> 1 is divide by 2
+      int urdiff = (rdiff + _rdiff) >> 1;
+      int uldiff = (ldiff + _ldiff) >> 1;
+
+      _rdiff = rdiff;
+      _ldiff = ldiff;
       
       if (p >= 0) {
-        OCR1A = 1500 + rdiff;
-        OCR1B = 1500 + ldiff;
+        OCR1A = 1500 + urdiff;
+        OCR1B = 1500 + uldiff;
       } else {
-        OCR1A = 1500 - rdiff;
-        OCR1B = 1500 - ldiff;
+        OCR1A = 1500 - urdiff;
+        OCR1B = 1500 - uldiff;
       }
 
       if (DEBUG) {
