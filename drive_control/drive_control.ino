@@ -21,11 +21,11 @@ void setup() {
   
   DDRB = 0xff;
 
-  if (DEBUG) {
+  #if DEBUG == 1
     Serial.begin(9600);
     while(!Serial)
       ;
-  }
+  #endif
 
   // Radio Communication Setup
   radio.begin();
@@ -123,7 +123,7 @@ void loop() {
         OCR1B = 1500 - uldiff;
       }
 
-      if (DEBUG) {
+      #if DEBUG == 1
         char fmt[] = "p = %s; r = %s; diff = %d; OCR1A = %d; OCR1B = %d\n";
         char buf[256];
         char rbuf[16], pbuf[16];
@@ -131,7 +131,7 @@ void loop() {
         dtostrf(r, 4, 2, rbuf);
         sprintf(buf, fmt, pbuf, rbuf, diff, OCR1A, OCR1B);
         Serial.println(buf);
-      }
+      #endif
 
       last_rx = millis();
   } else if (millis() - last_rx > TIMEOUT) {

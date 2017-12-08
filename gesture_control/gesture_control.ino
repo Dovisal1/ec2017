@@ -46,11 +46,11 @@ void setup() {
   EICRA = 0x03;
   EIMSK = 0x01;
 
-  if (DEBUG) {
+  #if DEBUG == 1
     Serial.begin(9600);
     while(!Serial)
       ;
-  }
+  #endif
 
 	mpu.initialize();
  
