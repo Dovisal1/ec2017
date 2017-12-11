@@ -72,18 +72,19 @@ void loop() {
         rmax = abs(r);
 
       /* turning logic */
-      if (r >= TURN_THRESHOLD) { //left turn
+      if (r > TURN_THRESHOLD) { //left turn
         cap = polymap(r, TURN_THRESHOLD, rmax, 0.0, 100.0, TURN_CURVE);
         rpercent = (300.0 - cap) / 200.0;
         lpercent = (100.0 - cap) / 100.0;
-      } else if (r <= -TURN_THRESHOLD) { //right turn
+      } else if (r < -TURN_THRESHOLD) { //right turn
         cap = polymap(r, -TURN_THRESHOLD, -rmax, 0.0, 100.0, TURN_CURVE);
         lpercent = (300.0 - cap) / 200.0;
         rpercent = (100.0 - cap) / 100.0;
       } else {
-        lpercent = rpercent = 1;
+        lpercent = rpercent = 1.0;
       }
 
+      /* speed mapping */
       if (speed > THROTTLE_MAX)
         diff = 500;
       else if (speed > THROTTLE_THRESHOLD)
@@ -91,9 +92,11 @@ void loop() {
       else
         diff = map(speed, 0, THROTTLE_THRESHOLD, 0, 50);
 
+      /* apportioning speed to each wheel based on turn */
       rdiff = diff * rpercent;
       ldiff = diff * lpercent;
-      
+
+      /* adjusting for speed limit on each wheel */
       if (rdiff > 500) {
           ldiff -= (rdiff - 500);
           rdiff = 500;
@@ -102,11 +105,13 @@ void loop() {
         ldiff = 500;
       }
 
+      /* invert the pulse differential from the mean if going in reverse */
       if (p < 0) {
         rdiff = -rdiff;
         ldiff = -ldiff;
       }
-      
+
+      /* update the pwm motor output */
       OCR1A = 1500 + rdiff;
       OCR1B = 1500 + ldiff;
 
@@ -127,11 +132,7 @@ void loop() {
   }
 }
 
-float polymap(float x, float imn, float imx, float omn, float omx, float curve) {
-  float ratio = (x - imn) / (imx - imn);
-  if (ratio < 0)
-    return omn + (omx - omn) * pow(-ratio, curve);
-  else
-    return omn + (omx - omn) * pow(ratio, curve);
+static inline float polymap(float x, float imn, float imx, float omn, float omx, float curve) {
+    return omn + (omx - omn) * pow((x - imn) / (imx - imn), curve);
 }
 
