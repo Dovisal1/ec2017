@@ -19,7 +19,7 @@ void setup() {
   OCR1A = 1500; //right
   OCR1B = 1500; //left
   
-  DDRB = 0xff;
+  DDRB = 0x06;
 
   #if DEBUG == 1
     Serial.begin(9600);
@@ -139,6 +139,10 @@ void loop() {
 }
 
 float polymap(float x, float imn, float imx, float omn, float omx, float curve) {
-  return omn + (omx - omn) * pow((x - imn) / (imx - imn), curve);
+  float ratio = (x - imn) / (imx - imn);
+  if (ratio < 0)
+    return omn + (omx - omn) * pow(-ratio, curve);
+  else
+    return omn + (omx - omn) * pow(ratio, curve);
 }
 
