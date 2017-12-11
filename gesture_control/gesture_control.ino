@@ -91,7 +91,7 @@ void setup() {
    */
   cli();
   WDTCSR = 0x18; // enter config
-  WDTCSR = 0x0a; // reset enable; 64ms timeout
+  WDTCSR = 0x0b; // reset enable; 64ms timeout
   sei();
 }
 

@@ -19,7 +19,7 @@ void setup() {
   OCR1A = 1500; //right
   OCR1B = 1500; //left
   
-  DDRB = 0xff;
+  DDRB = 0x06;
 
   #if DEBUG == 1
     Serial.begin(9600);
@@ -39,15 +39,12 @@ unsigned long last_rx = 0;
 float pmax = 55;
 float rmax = 55;
 
-#define TURN_THRESHOLD 16
-#define TURN_CURVE 4.8
+#define TURN_THRESHOLD 15
+#define TURN_CURVE 4.0
 #define THROTTLE_THRESHOLD 10
-#define THROTTLE_MAX 50
+#define THROTTLE_MAX 55
 #define THROTTLE_CURVE 0.75
 #define TIMEOUT 500
-
-// these store the values from the previous transmission
-int _ldiff = 0, _rdiff = 0;
 
 void loop() {
   
@@ -105,22 +102,13 @@ void loop() {
         ldiff = 500;
       }
 
-      // compute the current update as the average
-      // of the current and previous updates
-      // >> 1 is divide by 2
-      int urdiff = (rdiff + _rdiff) >> 1;
-      int uldiff = (ldiff + _ldiff) >> 1;
-
-      _rdiff = rdiff;
-      _ldiff = ldiff;
-      
-      if (p >= 0) {
-        OCR1A = 1500 + urdiff;
-        OCR1B = 1500 + uldiff;
-      } else {
-        OCR1A = 1500 - urdiff;
-        OCR1B = 1500 - uldiff;
+      if (p < 0) {
+        rdiff = -rdiff;
+        ldiff = -ldiff;
       }
+      
+      OCR1A = 1500 + rdiff;
+      OCR1B = 1500 + ldiff;
 
       #if DEBUG == 1
         char fmt[] = "p = %s; r = %s; diff = %d; OCR1A = %d; OCR1B = %d\n";
