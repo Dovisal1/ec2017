@@ -39,10 +39,11 @@ unsigned long last_rx = 0;
 float pmax = 55;
 float rmax = 55;
 
-#define TURN_THRESHOLD 14
-#define TURN_CURVE 4
+#define TURN_THRESHOLD 16
+#define TURN_CURVE 4.8
 #define THROTTLE_THRESHOLD 10
 #define THROTTLE_MAX 50
+#define THROTTLE_CURVE 0.75
 #define TIMEOUT 500
 
 // these store the values from the previous transmission
@@ -89,7 +90,7 @@ void loop() {
       if (speed > THROTTLE_MAX)
         diff = 500;
       else if (speed > THROTTLE_THRESHOLD)
-        diff = polymap(speed, THROTTLE_THRESHOLD, THROTTLE_MAX, 50, 500, 0.8);
+        diff = polymap(speed, THROTTLE_THRESHOLD, THROTTLE_MAX, 50, 500, THROTTLE_CURVE);
       else
         diff = map(speed, 0, THROTTLE_THRESHOLD, 0, 50);
 
