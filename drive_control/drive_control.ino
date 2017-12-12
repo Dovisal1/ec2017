@@ -40,7 +40,7 @@ float pmax = 55;
 float rmax = 55;
 
 #define TURN_THRESHOLD 15
-#define TURN_CURVE 4.0
+#define TURN_CURVE 3.5
 #define THROTTLE_THRESHOLD 10
 #define THROTTLE_MAX 55
 #define THROTTLE_CURVE 0.75
@@ -98,7 +98,7 @@ void loop() {
 
       /* adjusting for speed limit on each wheel */
       if (rdiff > 500) {
-          ldiff -= (rdiff - 500);
+          ldiff -= (rdiff - 500); //offset the speed loss
           rdiff = 500;
       } else if (ldiff > 500) {
         rdiff -= (ldiff - 500);
