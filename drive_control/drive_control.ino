@@ -57,11 +57,9 @@ void setup()
 
 unsigned long last_rx = 0;
 
-// dynamic range 
 float pmax = 55;
 float rmax = 55;
 
-// parameters for the 
 #define TURN_THRESHOLD      15
 #define TURN_CURVE          4.0
 #define THROTTLE_THRESHOLD  10
