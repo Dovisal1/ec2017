@@ -1,10 +1,5 @@
 
-#include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
-
-#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
-    #include "Wire.h"
-#endif
 
 #include <SPI.h>
 #include "RF24.h"
@@ -34,7 +29,7 @@ uint16_t fifo_count;
 uint8_t fifo[64];
 Quaternion q;
 VectorFloat gravity;
-float pr[2]; // pitch, roll
+float ypr[3]; // pitch, roll
 
 unsigned long lastread = 0;
 
@@ -107,18 +102,18 @@ void loop()
       // get values
       mpu.dmpGetQuaternion(&q, fifo);
       mpu.dmpGetGravity(&gravity, &q);
-      mpu.dmpGetPitchRoll(pr, &q, &gravity);
+      mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
 
       // convert pitch and roll to degrees
-      pr[0] = pr[0] * 180/M_PI;
-      pr[1] = pr[1] * 180/M_PI;
+      ypr[1] = ypr[1] * 180/M_PI;
+      ypr[2] = ypr[2] * 180/M_PI;
 
       // transmit the orientation angles
-      radio.write(pr, sizeof(pr));
+      radio.write(ypr+1, 2 * sizeof(float));
 
-      Dprint(pr[0]);
+      Dprint(ypr[1]);
       Dprint(F(" "));
-      Dprintln(pr[1]);
+      Dprintln(ypr[2]);
     }
    
    // record the last gyro read
