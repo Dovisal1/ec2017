@@ -39,12 +39,14 @@ unsigned long last_rx = 0;
 float pmax = 55;
 float rmax = 55;
 
-#define TURN_THRESHOLD 15
-#define TURN_CURVE 4.0
-#define THROTTLE_THRESHOLD 10
-#define THROTTLE_MAX 55
-#define THROTTLE_CURVE 0.75
-#define TIMEOUT 500
+#define TURN_THRESHOLD      15
+#define TURN_CURVE          4.0
+#define THROTTLE_THRESHOLD  10
+#define THROTTLE_MAX        55
+#define THROTTLE_STOP       75
+#define THROTTLE_TOP        550
+#define THROTTLE_CURVE      0.75
+#define TIMEOUT             500
 
 void loop() {
   
@@ -86,23 +88,23 @@ void loop() {
 
       /* speed mapping */
       if (speed > THROTTLE_MAX)
-        diff = 500;
+        diff = THROTTLE_TOP;
       else if (speed > THROTTLE_THRESHOLD)
-        diff = polymap(speed, THROTTLE_THRESHOLD, THROTTLE_MAX, 50, 500, THROTTLE_CURVE);
+        diff = polymap(speed, THROTTLE_THRESHOLD, THROTTLE_MAX, THROTTLE_STOP, THROTTLE_TOP, THROTTLE_CURVE);
       else
-        diff = map(speed, 0, THROTTLE_THRESHOLD, 0, 50);
+        diff = map(speed, 0, THROTTLE_THRESHOLD, 0, THROTTLE_STOP);
 
       /* apportioning speed to each wheel based on turn */
       rdiff = diff * rpercent;
       ldiff = diff * lpercent;
 
       /* adjusting for speed limit on each wheel */
-      if (rdiff > 500) {
-          ldiff -= (rdiff - 500);
-          rdiff = 500;
-      } else if (ldiff > 500) {
-        rdiff -= (ldiff - 500);
-        ldiff = 500;
+      if (rdiff > THROTTLE_TOP) {
+          ldiff -= (rdiff - THROTTLE_TOP);
+          rdiff = THROTTLE_TOP;
+      } else if (ldiff > THROTTLE_TOP) {
+        rdiff -= (ldiff - THROTTLE_TOP);
+        ldiff = THROTTLE_TOP;
       }
 
       /* invert the pulse differential from the mean if going in reverse */
