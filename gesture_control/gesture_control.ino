@@ -9,8 +9,6 @@
 #include <SPI.h>
 #include "RF24.h"
 
-#include <avr/wdt.h>
-
 #define DEBUG 0
 #define Dprint(s) if (DEBUG) Serial.print(s)
 #define Dprintln(s) if (DEBUG) Serial.println(s)
@@ -79,19 +77,6 @@ void setup() {
   radio.begin();
   radio.openWritingPipe(addresses[1]);
   radio.openReadingPipe(1, addresses[0]);
-
-  /* enable the watchdog
-   *  The gyroscope sensor will arbitrarily hang, and it seems
-   *  that others online are reporting the same problem without
-   *  any good solutions.
-   *  
-   *  Hopefully this watchdog timer will solve the issue
-   *  albeit in an imperfect way.
-   */
-  cli();
-  WDTCSR = 0x18; // enter config
-  WDTCSR = 0x0b; // reset enable
-  sei();
 }
 
 void loop() {
