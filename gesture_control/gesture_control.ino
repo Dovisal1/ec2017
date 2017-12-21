@@ -33,7 +33,7 @@ uint8_t fifo[64];
 
 Quaternion q;
 VectorFloat gravity;
-float ypr[3]; // yaw, pitch, roll
+float pr[2]; // pitch, roll
 unsigned long lastread = 0;
 
 void setup() {
@@ -81,7 +81,6 @@ void setup() {
   radio.openReadingPipe(1, addresses[0]);
 
   /* enable the watchdog
-   *  we are using a 250ms watchdog timer.
    *  The gyroscope sensor will arbitrarily hang, and it seems
    *  that others online are reporting the same problem without
    *  any good solutions.
@@ -91,7 +90,7 @@ void setup() {
    */
   cli();
   WDTCSR = 0x18; // enter config
-  WDTCSR = 0x0b; // reset enable; 64ms timeout
+  WDTCSR = 0x0b; // reset enable
   sei();
 }
 
@@ -118,17 +117,17 @@ void loop() {
 			// get values
 			mpu.dmpGetQuaternion(&q, fifo);
 			mpu.dmpGetGravity(&gravity, &q);
-			mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+      mpu.dmpGetPitchRoll(pr, &q, &gravity);
 
 			// convert pitch and roll to degrees
-			ypr[1] = ypr[1] * 180/M_PI;
-			ypr[2] = ypr[2] * 180/M_PI;
+			pr[0] = pr[0] * 180/M_PI;
+			pr[1] = pr[1] * 180/M_PI;
 
-      radio.write(ypr+1, 2*sizeof(float));
+      radio.write(pr, sizeof(pr));
 
-      Dprint(ypr[1]);
+      Dprint(pr[0]);
       Dprint(F(" "));
-      Dprintln(ypr[2]);
+      Dprintln(pr[1]);
 		}
    
    lastread = millis();

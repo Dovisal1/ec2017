@@ -39,6 +39,7 @@ unsigned long last_rx = 0;
 float pmax = 55;
 float rmax = 55;
 
+
 #define TURN_THRESHOLD      15
 #define TURN_CURVE          4.0
 #define THROTTLE_THRESHOLD  10
@@ -47,6 +48,7 @@ float rmax = 55;
 #define THROTTLE_TOP        550
 #define THROTTLE_CURVE      0.75
 #define TIMEOUT             500
+
 
 void loop() {
   
